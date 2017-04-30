@@ -1,0 +1,169 @@
+#include <Audio.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SerialFlash.h>
+
+// GUItool: begin automatically generated code
+AudioSynthWaveformSine   sine1;          //xy=976.5156860351562,544.5156726837158
+AudioOutputI2S           i2s1;           //xy=1110.515625,547.515625
+AudioConnection          patchCord1(sine1, 0, i2s1, 0);
+AudioConnection          patchCord2(sine1, 0, i2s1, 1);
+AudioControlSGTL5000     audioShield;    //xy=1110.5156936645508,472.00003814697266
+// GUItool: end automatically generated code
+
+elapsedMillis transposeClock;
+
+int baseOctave = 0;
+int chord[5];
+int scale[20]; 
+int chordSelect = 0; 
+int transpose = 0; 
+
+float mtof(int note) {     // Outputs a float freq based on incoming MIDI note. How to use: mtof(noteValue)
+  return (440.0f * exp2f((float)(note - 69) * 0.0833333f));
+}
+
+void setup() {
+  AudioMemory(8);
+  audioShield.enable();
+  audioShield.volume(0.8);
+  
+  sine1.amplitude(0.8);
+
+  chordSelect = 1;
+  transpose = 0; 
+
+  // Zero out arrays 
+  for (int i=0; i<5; i++){
+  scale[i] = 0;
+  }
+  
+  for (int i=0; i<20; i++){
+  scale[i] = 0;
+  }
+}
+
+void loop() {
+
+    // CHORD SELECTION
+  if (transposeClock >= 10000) {  // 10 seconds
+    chordSelect = random(9);
+    transpose = random(-12, 12);
+    transposeClock = 0;
+  }
+ switch (chordSelect) {
+
+    // MAJ
+    case 1:
+      chord[0] = 0;
+      chord[1] = 4;
+      chord[2] = 7;
+      chord[3] = 12;
+      chord[4] = 16;
+      break;
+
+    // MAJ 1st inversion
+    case 2:
+      chord[0] = 4;
+      chord[1] = 7;
+      chord[2] = 12;
+      chord[3] = 16;
+      chord[4] = 19;
+      break;
+
+    // MAJ 2nd inversion
+    case 3:
+      chord[0] = 7;
+      chord[1] = 12;
+      chord[2] = 16;
+      chord[3] = 19;
+      chord[4] = 24;
+      break;
+
+    // MIN
+    case 4:
+      chord[0] = 0;
+      chord[1] = 3;
+      chord[2] = 7;
+      chord[3] = 12;
+      chord[4] = 15;
+      break;
+
+
+    // MIN 1st inversion
+    case 5:
+      chord[0] = 3;
+      chord[1] = 7;
+      chord[2] = 12;
+      chord[3] = 15;
+      chord[4] = 19;
+      break;
+
+
+    // MIN second inversion
+    case 6:
+      chord[0] = 7;
+      chord[1] = 12;
+      chord[2] = 15;
+      chord[3] = 19;
+      chord[4] = 24;
+      break;
+
+    // major7
+    case 7:
+      chord[0] = 0;
+      chord[1] = 4;
+      chord[2] = 7;
+      chord[3] = 11;
+      chord[4] = 12;
+      break;
+
+    // minor7
+    case 8:
+      chord[0] = 0;
+      chord[1] = 3;
+      chord[2] = 7;
+      chord[3] = 10;
+      chord[4] = 12;
+      break;
+
+    // C7
+    case 9:
+      chord[0] = 0;
+      chord[1] = 4;
+      chord[2] = 7;
+      chord[3] = 10;
+      chord[4] = 12;
+      break;
+  }
+
+  baseOctave = 48; 
+  
+  // THIS IS THE PART YOU SHOULD ADD TO YOUR CODE 
+  //int noteSelect = map(analogRead(32), 0, 1023, 0, 19); // Ross's pot 
+  int noteSelect = map(analogRead(A18), 0, 1023, 0, 19);
+
+  scale[0] = chord[0];
+  scale[1] = chord[1];
+  scale[2] = chord[2];
+  scale[3] = chord[3];
+  scale[4] = chord[4];
+  scale[5] = chord[0] + 12;
+  scale[6] = chord[1] + 12;
+  scale[7] = chord[2] + 12;
+  scale[8] = chord[3] + 12;
+  scale[9] = chord[4] + 12;
+  scale[10] = chord[0] + 24;
+  scale[11] = chord[1] + 24;
+  scale[12] = chord[2] + 24;
+  scale[13] = chord[3] + 24;
+  scale[14] = chord[4] + 24;
+  scale[15] = chord[0] + 36;
+  scale[16] = chord[1] + 36;
+  scale[17] = chord[2] + 36;
+  scale[18] = chord[3] + 36;
+  scale[19] = chord[4] + 36;
+  
+  sine1.frequency(mtof(scale[noteSelect] + baseOctave + transpose));
+}
